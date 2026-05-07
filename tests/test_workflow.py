@@ -3,6 +3,8 @@ import os
 import shutil
 import sys
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 from context import dpti
@@ -146,6 +148,22 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(state["steps"]["make-a"]["status"], "completed")
         self.assertEqual(state["steps"]["make-b"]["status"], "completed")
         self.assertEqual(state["steps"]["make-c"]["status"], "completed")
+
+    def test_status_prints_dependencies(self):
+        workflow_file = self._write_workflow()
+        dpti.workflow.run_workflow(str(workflow_file))
+
+        output = StringIO()
+        with redirect_stdout(output):
+            dpti.workflow.print_status(str(workflow_file))
+
+        text = output.getvalue()
+        self.assertIn("step", text)
+        self.assertIn("status", text)
+        self.assertIn("needs", text)
+        self.assertIn("make-a", text)
+        self.assertIn("make-b", text)
+        self.assertIn("make-a", text.split("make-b", 1)[1])
 
 
 if __name__ == "__main__":

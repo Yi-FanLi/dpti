@@ -101,6 +101,10 @@ dpti workflow run workflow.json --dry-run
 dpti workflow run workflow.json --jobs 3
 ```
 
+`dpti workflow status workflow.json` prints each step, its saved status, and the
+steps listed in `needs`.  This makes it easy to see both the current progress and
+the dependency graph that controls the next runnable steps.
+
 The workflow state is stored in `workflow_state.json` by default.  If a run is
 interrupted, rerunning `dpti workflow run workflow.json` continues from the saved
 state and verifies the `done_if` outputs before skipping completed steps.

@@ -303,10 +303,23 @@ def print_status(workflow_file):
     print(f"workflow: {Path(workflow_file).resolve()}")
     print(f"state: {state_file}")
     steps = workflow.get("steps", [])
+    dependencies = _step_dependencies(steps)
+    name_width = max([len("step")] + [len(step["name"]) for step in steps])
+    status_width = max(
+        [len("status")]
+        + [
+            len(state.get("steps", {}).get(step["name"], {}).get("status", "pending"))
+            for step in steps
+        ]
+    )
+    print(f"{'step':{name_width}s}  {'status':{status_width}s}  needs")
+    print(f"{'-' * name_width}  {'-' * status_width}  -----")
     for step in steps:
         name = step["name"]
         status = state.get("steps", {}).get(name, {}).get("status", "pending")
-        print(f"{name:30s} {status}")
+        needs = dependencies[name]
+        needs_text = ", ".join(needs) if needs else "-"
+        print(f"{name:{name_width}s}  {status:{status_width}s}  {needs_text}")
 
 
 def add_module_subparsers(main_subparsers):
