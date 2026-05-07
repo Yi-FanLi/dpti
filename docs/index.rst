@@ -10,6 +10,7 @@ DPTI is a Python package to automate thermodynamic integration (TI) calculations
 
    install
    getting-started
+   workflow
    cli
    api/api
 
