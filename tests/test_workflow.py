@@ -35,6 +35,7 @@ class TestWorkflow(unittest.TestCase):
                 },
                 {
                     "name": "make-b",
+                    "needs": ["make-a"],
                     "command": [
                         sys.executable,
                         "-c",
