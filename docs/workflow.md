@@ -54,6 +54,38 @@ same way as installed command-line environments.
 complete.  When a completed step is encountered again, it is skipped unless
 `--rerun-all` is used.
 
+For multi-task jobs, `done_if` may contain glob patterns such as
+`hti/task.*/log.lammps` or `ti.t/task.*/log.lammps`.  If the parent path contains
+a glob, the driver checks that every matching task directory contains the
+requested output file.  This avoids marking an HTI or TI run as complete when
+only one LAMMPS task has finished.
+
+Steps are serial by default: a step without `needs` depends on the previous step.
+Set `needs` explicitly to describe a dependency graph and allow independent
+steps to run together.  For example, `tti.run` and `pti.run` can depend on their
+own `gen` steps, while their `compute` steps can depend on both the TI run and
+the HTI compute step.
+
+```json
+{
+  "name": "tti.gen",
+  "needs": ["nvt.run"],
+  "command": ["dpti", "ti", "gen", "ti.t.json", "-o", "ti.t"],
+  "done_if": ["ti.t/ti_settings.json"]
+},
+{
+  "name": "tti.run",
+  "command": ["dpti", "ti", "run", "ti.t", "machine.json"],
+  "done_if": ["ti.t/task.*/log.lammps"]
+},
+{
+  "name": "tti.compute",
+  "needs": ["tti.run", "hti.compute"],
+  "command": ["dpti", "ti", "compute", "ti.t", "-H", "hti"],
+  "done_if": ["ti.t/result.json"]
+}
+```
+
 ## Commands
 
 ```bash
@@ -63,6 +95,7 @@ dpti workflow resume workflow.json
 dpti workflow run workflow.json --from-step hti.gen
 dpti workflow run workflow.json --rerun-all
 dpti workflow run workflow.json --dry-run
+dpti workflow run workflow.json --jobs 3
 ```
 
 The workflow state is stored in `workflow_state.json` by default.  If a run is
