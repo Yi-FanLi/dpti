@@ -3,7 +3,7 @@
 `dpti workflow` provides a lightweight command-line workflow driver for chaining
 existing `dpti` commands.  It is intended for long thermodynamic-integration
 campaigns where the user wants one JSON file to describe the ordered calculation
-steps, while `dpti` records which steps have completed and where to resume.
+steps, while `dpti` records which steps have completed and where to continue.
 
 The workflow driver does not replace the existing physics modules.  Each step is
 still an ordinary `dpti equi`, `dpti hti`, `dpti ti`, or `dpti gdi` command.  The
@@ -95,7 +95,6 @@ depend on both the TI run and the HTI compute step.
 ```bash
 dpti workflow run workflow.json
 dpti workflow status workflow.json
-dpti workflow resume workflow.json
 dpti workflow run workflow.json --from-step hti.gen
 dpti workflow run workflow.json --rerun-all
 dpti workflow run workflow.json --dry-run
@@ -103,5 +102,5 @@ dpti workflow run workflow.json --jobs 3
 ```
 
 The workflow state is stored in `workflow_state.json` by default.  If a run is
-interrupted, rerunning `dpti workflow resume workflow.json` continues from the
-saved state and verifies the `done_if` outputs before skipping completed steps.
+interrupted, rerunning `dpti workflow run workflow.json` continues from the saved
+state and verifies the `done_if` outputs before skipping completed steps.

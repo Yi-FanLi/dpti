@@ -326,7 +326,7 @@ def add_module_subparsers(main_subparsers):
         "--rerun-all", action="store_true", help="rerun steps even if marked completed"
     )
     parser_run.add_argument(
-        "--from-step", type=str, default=None, help="resume from the named step"
+        "--from-step", type=str, default=None, help="start from the named step"
     )
     parser_run.add_argument(
         "-j",
@@ -341,22 +341,6 @@ def add_module_subparsers(main_subparsers):
     parser_status.add_argument("WORKFLOW", type=str, help="workflow json file")
     parser_status.set_defaults(func=handle_status)
 
-    parser_resume = module_subparsers.add_parser(
-        "resume", help="resume a workflow using the saved state file"
-    )
-    parser_resume.add_argument("WORKFLOW", type=str, help="workflow json file")
-    parser_resume.add_argument(
-        "--from-step", type=str, default=None, help="resume from the named step"
-    )
-    parser_resume.add_argument(
-        "-j",
-        "--jobs",
-        type=int,
-        default=1,
-        help="maximum number of workflow steps to run at the same time",
-    )
-    parser_resume.set_defaults(func=handle_resume)
-
 
 def handle_run(args):
     run_workflow(
@@ -366,10 +350,6 @@ def handle_run(args):
         from_step=args.from_step,
         jobs=args.jobs,
     )
-
-
-def handle_resume(args):
-    run_workflow(args.WORKFLOW, from_step=args.from_step, jobs=args.jobs)
 
 
 def handle_status(args):
