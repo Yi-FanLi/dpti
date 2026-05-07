@@ -18,26 +18,31 @@ driver adds orchestration, state tracking, output checks, and restart support.
   "steps": [
     {
       "name": "npt.gen",
+      "needs": [],
       "command": ["dpti", "equi", "gen", "npt.json", "-o", "npt"],
       "done_if": ["npt/in.lammps"]
     },
     {
       "name": "npt.run",
+      "needs": ["npt.gen"],
       "command": ["dpti", "equi", "run", "npt", "machine.json"],
       "done_if": ["npt/out.lmp", "npt/log.lammps"]
     },
     {
       "name": "npt.compute",
+      "needs": ["npt.run"],
       "command": ["dpti", "equi", "compute", "npt"],
       "done_if": ["npt/result.json"]
     },
     {
       "name": "nvt.gen",
+      "needs": ["npt.compute"],
       "command": ["dpti", "equi", "gen", "nvt.json", "-o", "nvt", "--conf-npt", "npt"],
       "done_if": ["nvt/in.lammps"]
     },
     {
       "name": "hti.gen",
+      "needs": ["nvt.run"],
       "command": ["dpti", "hti", "gen", "hti.json", "-o", "hti", "-s", "one-step"],
       "done_if": ["hti/in.json"]
     }
@@ -60,11 +65,10 @@ a glob, the driver checks that every matching task directory contains the
 requested output file.  This avoids marking an HTI or TI run as complete when
 only one LAMMPS task has finished.
 
-Steps are serial by default: a step without `needs` depends on the previous step.
-Set `needs` explicitly to describe a dependency graph and allow independent
-steps to run together.  For example, `tti.run` and `pti.run` can depend on their
-own `gen` steps, while their `compute` steps can depend on both the TI run and
-the HTI compute step.
+Use `needs` to describe the dependency graph and allow independent steps to run
+together.  A root step should set `"needs": []`.  For example, `tti.run` and
+`pti.run` can depend on their own `gen` steps, while their `compute` steps can
+depend on both the TI run and the HTI compute step.
 
 ```json
 {

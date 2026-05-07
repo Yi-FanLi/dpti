@@ -130,26 +130,19 @@ def _selected_steps(steps, from_step=None):
 
 def _step_dependencies(steps):
     dependencies = {}
-    previous = None
     names = {step["name"] for step in steps}
     for step in steps:
         name = step["name"]
-        if "needs" in step:
-            needs = step["needs"]
-            if isinstance(needs, str):
-                needs = [needs]
-            needs = list(needs)
-        elif previous is None:
-            needs = []
-        else:
-            needs = [previous]
+        needs = step.get("needs", [])
+        if isinstance(needs, str):
+            needs = [needs]
+        needs = list(needs)
         unknown = sorted(set(needs) - names)
         if unknown:
             raise ValueError(
                 f"workflow step '{name}' depends on unknown steps: {unknown}"
             )
         dependencies[name] = needs
-        previous = name
     return dependencies
 
 
