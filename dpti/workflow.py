@@ -111,12 +111,21 @@ def _expand_required_paths(paths, work_dir):
 
 
 def _step_done(step, step_state, work_dir):
-    if step_state.get("status") != "completed":
-        return False
     done_if = step.get("done_if", [])
     if isinstance(done_if, str):
         done_if = [done_if]
-    return not _check_paths(done_if, work_dir)
+    if done_if:
+        return not _check_paths(done_if, work_dir)
+    if step_state.get("status") != "completed":
+        return False
+    return True
+
+
+def _step_status(step, step_state, work_dir):
+    status = step_state.get("status", "pending")
+    if _step_done(step, step_state, work_dir):
+        return "completed" if status == "completed" else f"{status}->completed"
+    return status
 
 
 def _selected_steps(steps, from_step=None):
@@ -298,6 +307,7 @@ def run_workflow(
 
 def print_status(workflow_file):
     workflow = _load_json(workflow_file)
+    root = _workflow_root(workflow_file, workflow)
     state_file = _state_path(workflow_file, workflow)
     state = _load_state(state_file)
     print(f"workflow: {Path(workflow_file).resolve()}")
@@ -308,7 +318,13 @@ def print_status(workflow_file):
     status_width = max(
         [len("status")]
         + [
-            len(state.get("steps", {}).get(step["name"], {}).get("status", "pending"))
+            len(
+                _step_status(
+                    step,
+                    state.get("steps", {}).get(step["name"], {}),
+                    _step_work_dir(root, step),
+                )
+            )
             for step in steps
         ]
     )
@@ -316,7 +332,9 @@ def print_status(workflow_file):
     print(f"{'-' * name_width}  {'-' * status_width}  -----")
     for step in steps:
         name = step["name"]
-        status = state.get("steps", {}).get(name, {}).get("status", "pending")
+        status = _step_status(
+            step, state.get("steps", {}).get(name, {}), _step_work_dir(root, step)
+        )
         needs = dependencies[name]
         needs_text = ", ".join(needs) if needs else "-"
         print(f"{name:{name_width}s}  {status:{status_width}s}  {needs_text}")
