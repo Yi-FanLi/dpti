@@ -165,6 +165,34 @@ class TestWorkflow(unittest.TestCase):
         self.assertIn("make-b", text)
         self.assertIn("make-a", text.split("make-b", 1)[1])
 
+    def test_done_if_output_overrides_failed_state(self):
+        workflow = {
+            "work_base": ".",
+            "steps": [
+                {
+                    "name": "already-done",
+                    "command": [
+                        sys.executable,
+                        "-c",
+                        "raise SystemExit('should not run')",
+                    ],
+                    "done_if": "done.txt",
+                }
+            ],
+        }
+        workflow_file = self.work_dir / "workflow.json"
+        workflow_file.write_text(json.dumps(workflow))
+        (self.work_dir / "done.txt").write_text("done")
+        state = {"steps": {"already-done": {"status": "failed"}}}
+        (self.work_dir / "workflow_state.json").write_text(json.dumps(state))
+
+        dpti.workflow.run_workflow(str(workflow_file))
+
+        output = StringIO()
+        with redirect_stdout(output):
+            dpti.workflow.print_status(str(workflow_file))
+        self.assertIn("failed->completed", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
