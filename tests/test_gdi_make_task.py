@@ -84,6 +84,31 @@ class TestGdiMakeTask(unittest.TestCase):
             f2 = os.path.join(task_dir, file)
             self.assertEqual(get_file_md5(f1), get_file_md5(f2), msg=(f1, f2))
 
+    @patch("numpy.random.default_rng")
+    def test_deepmd_uses_local_graph_name(self, patch_random):
+        patch_random.return_value = MagicMock(integers=MagicMock(return_value=7858))
+        test_dir = os.path.join(self.test_dir, "deepmd_local_graph")
+        json_file = os.path.join(self.benchmark_dir, "deepmd", "pb.json")
+        with open(json_file) as f:
+            jdata = json.load(f)
+
+        dpti.gdi._make_tasks_onephase(
+            temp=300,
+            pres=50000,
+            task_path=test_dir,
+            jdata=jdata,
+            ens="npt",
+            conf_file="conf.lmp",
+            graph_file="graph.0.pb",
+            if_meam=False,
+            meam_model=None,
+        )
+
+        with open(os.path.join(test_dir, "in.lammps")) as fp:
+            lmp_input = fp.read()
+        self.assertIn("pair_style      deepmd graph.pb", lmp_input)
+        self.assertNotIn("pair_style      deepmd graph.0.pb", lmp_input)
+
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree("tmp_gdi/")

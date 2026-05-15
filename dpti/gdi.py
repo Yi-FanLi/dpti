@@ -106,9 +106,11 @@ def _make_tasks_onephase(
     os.chdir(task_path)
     if not os.path.exists("conf.lmp"):
         os.symlink(os.path.relpath(conf_file), "conf.lmp")
+    local_graph_file = graph_file
     if graph_file:
         if not os.path.exists("graph.pb"):
             os.symlink(os.path.relpath(graph_abs_file), "graph.pb")
+        local_graph_file = "graph.pb"
 
     if if_meam:
         relative_link_file(meam_model["library_abs_path"], "./")
@@ -122,7 +124,7 @@ def _make_tasks_onephase(
     lmp_str = _gen_lammps_input(
         "conf.lmp",
         mass_map,
-        graph_file,
+        local_graph_file,
         nsteps,
         timestep,
         ens,
