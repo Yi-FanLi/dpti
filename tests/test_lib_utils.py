@@ -5,7 +5,13 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from dpti.lib.utils import block_avg, integrate_range_hti, parse_seq, relative_link_file
+from dpti.lib.utils import (
+    block_avg,
+    integrate_range_hti,
+    integrate_sys_err_simpson,
+    parse_seq,
+    relative_link_file,
+)
 
 lambda_seq = [
     "0.00:0.05:0.010",
@@ -142,6 +148,14 @@ class TestIntegrateRangeHti(unittest.TestCase):
         self.assertAlmostEqual(result1, result2, places=8)
         self.assertAlmostEqual(stt_err1, stt_err2, places=8)
         self.assertAlmostEqual(sys_err2, sys_err2, places=8)
+
+
+class TestIntegrateSysErrSimpson(unittest.TestCase):
+    def test_endpoint_tail_with_160_points(self):
+        xx = np.linspace(0, 1, 160)
+        yy = 2.0 * xx + 3.0
+        err = integrate_sys_err_simpson(xx, yy)
+        self.assertAlmostEqual(err, 0.0, places=12)
 
 
 class TestRelativeLinkFile(unittest.TestCase):
